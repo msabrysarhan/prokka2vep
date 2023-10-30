@@ -2,8 +2,6 @@
 
 ## Introduction
 
-To be summarized
-
 prokka (https://github.com/tseemann/prokka)
 VEP (https://www.ensembl.org/info/docs/tools/vep/index.html)
 This script converts prokka GFF files to VEP-friendly GFF format. 
