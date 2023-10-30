@@ -114,20 +114,20 @@ def create_transcript_df(df):
     for index, row in df.iterrows():
         if row['FeatureType'] == 'gene':
             # Create a copy of the row
-            new_row = row.copy()
+            new_row = row.copy(deep=True)
             # Change the "FeatureType" in the copied row
             new_row['FeatureType'] = 'transcript'
             # Append the modified row to the list
             modified_rows.append(new_row)
-
-    transcript_df = pd.DataFrame(modified_rows)
+    
+    transcript_df = pd.DataFrame(modified_rows, index=None)
 
     # Now, let's modify the attributes of this df
     for index, row in transcript_df.iterrows():
         transcript_df.at[index, 'Attributes']['ID'] = transcript_df.at[index, 'Attributes']['ID'].replace('_gene', '_transcript')
         transcript_df.at[index, 'Attributes']['Parent'] = transcript_df.at[index, 'Attributes']['ID'].replace('_transcript', '_gene')
         transcript_df.at[index, 'Attributes']['biotype'] = 'protein_coding'
-    
+
     return transcript_df
 
 
@@ -136,6 +136,7 @@ def modify_df(df):
     This function takes the original gff df and change the attributes of the parents and the IDs
     Returns: modified pandas dataframe
     """
+    
     # Now, let's modify the attributes of this df
     for index, row in df.iterrows():
         if row['FeatureType'] == 'mRNA':
@@ -146,7 +147,7 @@ def modify_df(df):
         elif row['FeatureType'] == 'CDS':
             df.at[index, 'Attributes']['Parent'] = df.at[index, 'Attributes']['ID']+'_transcript'
             df.at[index, 'Attributes']['ID'] = df.at[index, 'Attributes']['ID'] + '_cds'
-        
+    
     return df
 
 
@@ -188,7 +189,7 @@ def reorder_gff(df):
     
     # Reorder the DataFrame by 'SeqName', 'Start', and 'End'
     reordered_df = reordered_df.sort_values(['SeqName', 'Start', 'End'], ascending=[True, True, True])
-    
+
     return reordered_df
 
 
@@ -214,7 +215,7 @@ def non_coding_rna(df):
             df.at[index, 'Attributes']['Parent'] = df.at[index, 'Attributes']['ID']+'_gene'
             df.at[index-1, 'Attributes']['Parent'] = df.at[index, 'Attributes']['ID']+'_gene'
             drop_list.append(index-1)
-                
+    
     return df.drop(drop_list)
 
 
@@ -255,11 +256,11 @@ def main():
 
     process_gff_file(input_gff, output_gff+'.tmp')
 
-    gff_df = read_gff_as_dataframe(output_gff+'.tmp')
+    #gff_df = read_gff_as_dataframe(output_gff+'.tmp')
 
-    transcript_df = create_transcript_df(gff_df)
+    transcript_df = create_transcript_df(read_gff_as_dataframe(output_gff+'.tmp'))
     
-    modified_df = modify_df(gff_df)
+    modified_df = modify_df(read_gff_as_dataframe(output_gff+'.tmp'))
 
     merged_df = merge_gffs(transcript_df, modified_df)
 
